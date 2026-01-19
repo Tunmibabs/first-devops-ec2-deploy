@@ -9,24 +9,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-    - name: Remove old file on server
-      uses: appleboy/ssh-action@v0.1.8
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          sudo rm -f /var/www/html/index.html
-
-    - name: Copy new file to server
+    - name: Copy site files to server
       uses: appleboy/scp-action@v0.1.4
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         source: "index.html"
-        target: "/var/www/html"
+        target: "/home/ubuntu/deploy"
+
+    - name: Deploy to web root
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          sudo mv /home/ubuntu/deploy/index.html /var/www/html/index.html
+          sudo systemctl reload nginx
 
